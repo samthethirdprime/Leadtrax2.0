@@ -25,7 +25,7 @@ function render(leads) {
    // 2. Add the item to the listItems variable instead of the ulEl.innerHTML
    //listItems += "<li><a target='_blank' href='"+ myLead[i] +"'>" + myLead[i] + "</a></li>"
    listItems += `<li>
-                   <a target='_blank' href=' ${leads[i]}' >${leads[i]}</a>
+                   <a target='_blank' href=' ${leads[i].url}' >${leads[i].title}</a>
                    </li>`
    console.log(listItems)
 
@@ -85,7 +85,9 @@ tabBtn.addEventListener("click", function () {
   // chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 //  })
   chrome.tabs.query({active:true, currentWindow:true}, function (tabs) {
-    myLead.push(tabs[0].url)
+    for(let i=0; i<tabs.length; i++) {
+      myLead.push({url: tabs[i].url, title: tabs[i].title})
+    }
     localStorage.setItem("myLead", JSON.stringify(myLead))
     render(myLead)
 
@@ -116,7 +118,10 @@ inputBtn.addEventListener("click", function () {
   //myLead = []
   //falsy if there wasn't a value stored to which you get a blank array
  // }
-    myLead.push(inputEl.value)
+    myLead.push({
+      url: inputEl.value,
+      title: inputEl.value
+    })
     inputEl.value = ""
     // Save the myLeads array to localStorage
     // PS: remember JSON.stringify()
