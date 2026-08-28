@@ -18,15 +18,19 @@ if(leadsFromLocalStorage) {
   render(myLead)
 }
 function render(leads) {
+
+
   let listItems = ""
   for(let i=0; i<leads.length; i++) {
     // Replace .textContent with .innerHTML and use <li> tags
   // THIS IS INNERHTML WHERE YOU WRITE A BIG HTML STRING AND THEN +=CONCANTNATE SO THE DOM NODES ARE REDUILT AND DESTROYED EVERYTIME.
    // 2. Add the item to the listItems variable instead of the ulEl.innerHTML
    //listItems += "<li><a target='_blank' href='"+ myLead[i] +"'>" + myLead[i] + "</a></li>"
-   listItems += `<li>
+   listItems += `<div>
                    <a target='_blank' href=' ${leads[i].url}' >${leads[i].title}</a>
-                   </li>`
+                   <button class="delete-btn" data-url="${leads[i].url}">Delete</button>
+                    <button class="copy-btn" data-url="${leads[i].url}">Copy</button>
+                   </div>`
    console.log(listItems)
 
 
@@ -43,19 +47,47 @@ function render(leads) {
   }
    listEl.innerHTML = listItems
 
-   // CLEAR INPUT AND LISTITEMS
+   const deleted = document.querySelectorAll(".delete-btn")
 
+   deleted.forEach(function(button) {
+    button.addEventListener("click", function () {
+      const data = button.dataset.url
+      deleteHistory(data)
+    })
+   })
 
-// 3. Render the listItems inside the unordered list using ulEl.innerHTML
+   const copied = document.querySelectorAll(".copy-btn")
 
-
-//for(let i=0; i<myLead.length; i++) {
-  //console.log(myLead[i])
-//}
-
+   copied.forEach(function(button) {
+    button.addEventListener("click", function() {
+      const data = button.dataset.url
+      copyButton(data,button)
+    })
+   })
 
 }
 
+function copyButton(url,copyBtn) {
+  navigator.clipboard.writeText(url)
+
+  copyBtn.textContent= "copied"
+
+  setTimeout(function() {
+    copyBtn.textContent="copy"
+  },2000)
+
+}
+
+function deleteHistory(url) {
+
+    myLead = myLead.filter(function(lead) {
+        return lead.url !== url
+    })
+
+    localStorage.setItem("myLead", JSON.stringify(myLead))
+
+    render(myLead)
+}
 
 
 
@@ -84,9 +116,19 @@ tabBtn.addEventListener("click", function () {
   //use chrome api to get the tab
   // chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 //  })
-  chrome.tabs.query({active:true, currentWindow:true}, function (tabs) {
+  chrome.tabs.query({currentWindow:true}, function (tabs) {
+    if(tabs.length===0) {
+      return;
+    }
     for(let i=0; i<tabs.length; i++) {
-      myLead.push({url: tabs[i].url, title: tabs[i].title})
+      let duplicate = myLead.some(function(lead) {
+        return lead.url===tabs[i].url
+      })
+
+      if(!duplicate) {
+myLead.push({url: tabs[i].url, title: tabs[i].title})
+      }
+
     }
     localStorage.setItem("myLead", JSON.stringify(myLead))
     render(myLead)
@@ -118,14 +160,27 @@ inputBtn.addEventListener("click", function () {
   //myLead = []
   //falsy if there wasn't a value stored to which you get a blank array
  // }
-    myLead.push({
-      url: inputEl.value,
-      title: inputEl.value
+
+ const query = inputEl.value
+ if(query==="") {
+  return;
+ }
+
+ const duplicate = myLead.some(function(lead) {
+  return lead.url===query
+ })
+
+ if(!duplicate) {
+  myLead.push({
+      url: query,
+      title: query
     })
     inputEl.value = ""
     // Save the myLeads array to localStorage
     // PS: remember JSON.stringify()
     localStorage.setItem("myLead", JSON.stringify(myLead))
+ }
+
     // Get the leads from the localStorage
 // Store it in a variable, leadsFromLocalStorage
 // Log out the variable
